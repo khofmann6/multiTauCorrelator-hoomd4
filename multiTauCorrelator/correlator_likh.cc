@@ -16,7 +16,8 @@ Correlator_Likh::Correlator_Likh(const unsigned int numcorrin,
 Correlator_Likh::~Correlator_Likh() {
   if (numcorrelators == 0) return;
 
-  delete[] shift;
+  delete[] shiftA;
+  delete[] shiftB;
   delete[] correlation;
   delete[] ncorrelation;
   delete[] accumulator;
@@ -43,7 +44,8 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
 
   length = numcorrelators * p;
 
-  shift = new double*[numcorrelators];
+  shiftA = new double*[numcorrelators];
+  shiftB = new double*[numcorrelators];
   correlation = new double*[numcorrelators];
   ncorrelation = new unsigned long int*[numcorrelators];
   accumulator = new double[numcorrelators];
@@ -51,7 +53,8 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
   insertindex = new unsigned int[numcorrelators];
 
   for (unsigned int j = 0; j < numcorrelators; ++j) {
-    shift[j] = new double[p];
+    shiftA[j] = new double[p];
+    shiftB[j] = new double[p];
 
     /* It can be optimized: Apart from correlator 0, correlation and
      * ncorrelation arrays only use p/2 values */
@@ -66,7 +69,8 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
 void Correlator_Likh::initialize() {
   for (unsigned int j = 0; j < numcorrelators; ++j) {
     for (unsigned int i = 0; i < p; ++i) {
-      shift[j][i] = -2E10;
+      shiftA[j][i] = -2E10;
+      shiftB[j][i] = -2E10;
       correlation[j][i] = 0;
       ncorrelation[j][i] = 0;
     }
@@ -82,10 +86,11 @@ void Correlator_Likh::initialize() {
 
   npcorr = 0;
   kmax = 0;
-  accval = 0;
+  accvalA = 0;
+  accvalB = 0;
 }
 
-void Correlator_Likh::add(const double w, const unsigned int k) {
+void Correlator_Likh::add(const double wA, const double wB, const unsigned int k) {
 /*
 The add function is called every time you have a new value (e.g., at each timestep). It:
 
@@ -99,16 +104,20 @@ The add function is called every time you have a new value (e.g., at each timest
   if (k > kmax) kmax = k;
 
   /// (1) Insert new value in shift array
-  shift[k][insertindex[k]] = w;
+  shiftA[k][insertindex[k]] = wA;
+  shiftB[k][insertindex[k]] = wB;
 
   /// Add to average value
-  if (k == 0) accval += w;
+  if (k == 0) {
+    accvalA += wA;
+    accvalB += wB;
+  }
 
   /// (3 & 4 Add to accumulator and, if needed, add to next correlator
-  accumulator[k] += w;
+  accumulator[k] += wA;   // For higher levels we correlate averaged A with averaged B
   ++naccumulator[k];
   if (naccumulator[k] == m) {
-    add(accumulator[k] / m, k + 1);
+    add(accumulator[k] / m, accumulator[k] / m, k + 1);
     accumulator[k] = 0;
     naccumulator[k] = 0;
   }
@@ -119,7 +128,7 @@ The add function is called every time you have a new value (e.g., at each timest
     int ind2 = ind1;
     for (unsigned int j = 0; j < p; ++j) {
       if (shift[k][ind2] > -1e10) {
-        correlation[k][j] += shift[k][ind1] * shift[k][ind2];
+        correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
         ++ncorrelation[k][j];
       }
       --ind2;
@@ -130,7 +139,7 @@ The add function is called every time you have a new value (e.g., at each timest
     for (unsigned int j = d_min; j < p; ++j) {
       if (ind2 < 0) ind2 += p;
       if (shift[k][ind2] > -1e10) {
-        correlation[k][j] += shift[k][ind1] * shift[k][ind2];
+        correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
         ++ncorrelation[k][j];
       }
       --ind2;
@@ -154,7 +163,11 @@ void Correlator_Likh::evaluate(const bool norm) {
   unsigned int im = 0;
 
   double aux = 0;
-  if (norm) aux = (accval / ncorrelation[0][0]) * (accval / ncorrelation[0][0]);
+  if (norm && ncorrelation[0][0] > 0) {
+    double meanA = accvalA / ncorrelation[0][0];
+    double meanB = accvalB / ncorrelation[0][0];
+    aux = meanA * meanB;
+  }
 
   // First correlator
   for (unsigned int i = 0; i < p; ++i) {

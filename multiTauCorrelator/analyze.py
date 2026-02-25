@@ -86,11 +86,16 @@ class autocorrelate(Action):
 
 
         for i, quantity in enumerate(self.quantities):
-            # Get the value of the quantity from the logger
-            value = self._get_quantity_value(quantity)
-            # Add the value to the correlator
-            # add() is defined in the C++ module `correlator_likh.cc` and was exposed to Python via pybind11
-            self.m_corr[i].add(value)
+
+            if isinstance(quantity, tuple):
+                q1, q2 = quantity
+                value1 = self._get_quantity_value(q1)
+                value2 = self._get_quantity_value(q2)
+                self.m_corr[i].add(value1, value2)
+
+            else:
+                value = self._get_quantity_value(quantity)
+                self.m_corr[i].add(value, value)
 
         if (self.eval_period == 0):
             return
