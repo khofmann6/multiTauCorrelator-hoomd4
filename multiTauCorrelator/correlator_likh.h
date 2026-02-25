@@ -16,7 +16,7 @@
 class Correlator_Likh {
  public:
   double **shiftA;       // Where the incoming A values are stored
-  double **shiftB,       // Where the incoming B values are stored
+  double **shiftB;       // Where the incoming B values are stored
   double **correlation;  // Array for the actual calculated correlation function
   unsigned long int **ncorrelation;  // Number of values accumulated in corr
   double *accumulator;               // Accumulator in each correlator
