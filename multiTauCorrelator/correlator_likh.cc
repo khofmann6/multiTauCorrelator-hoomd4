@@ -127,7 +127,7 @@ The add function is called every time you have a new value (e.g., at each timest
   if (k == 0) {  /// First correlator is different
     int ind2 = ind1;
     for (unsigned int j = 0; j < p; ++j) {
-      if (shift[k][ind2] > -1e10) {
+      if (shiftA[k][ind2] > -1e10) {
         correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
         ++ncorrelation[k][j];
       }
@@ -138,7 +138,7 @@ The add function is called every time you have a new value (e.g., at each timest
     int ind2 = ind1 - d_min;
     for (unsigned int j = d_min; j < p; ++j) {
       if (ind2 < 0) ind2 += p;
-      if (shift[k][ind2] > -1e10) {
+      if (shiftA[k][ind2] > -1e10) {
         correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
         ++ncorrelation[k][j];
       }
