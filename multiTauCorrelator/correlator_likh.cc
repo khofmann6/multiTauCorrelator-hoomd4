@@ -126,7 +126,6 @@ The add function is called every time you have a new value (e.g., at each timest
     add(avgA, avgB, k + 1);
     accumulatorA[k] = 0.0;
     accumulatorB[k] = 0.0;
-    accumulator[k] = 0;
     naccumulator[k] = 0;
   }
 
