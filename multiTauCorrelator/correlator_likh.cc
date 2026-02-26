@@ -20,7 +20,8 @@ Correlator_Likh::~Correlator_Likh() {
   delete[] shiftB;
   delete[] correlation;
   delete[] ncorrelation;
-  delete[] accumulator;
+  delete[] accumulatorA;
+  delete[] accumulatorB;
   delete[] naccumulator;
   delete[] insertindex;
 
@@ -48,7 +49,8 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
   shiftB = new double*[numcorrelators];
   correlation = new double*[numcorrelators];
   ncorrelation = new unsigned long int*[numcorrelators];
-  accumulator = new double[numcorrelators];
+  accumulatorA = new double[numcorrelators];
+  accumulatorB = new double[numcorrelators];
   naccumulator = new unsigned int[numcorrelators];
   insertindex = new unsigned int[numcorrelators];
 
@@ -74,7 +76,8 @@ void Correlator_Likh::initialize() {
       correlation[j][i] = 0;
       ncorrelation[j][i] = 0;
     }
-    accumulator[j] = 0.0;
+    accumulatorA[j] = 0.0;
+    accumulatorB[j] = 0.0;
     naccumulator[j] = 0;
     insertindex[j] = 0;
   }
@@ -114,10 +117,15 @@ The add function is called every time you have a new value (e.g., at each timest
   }
 
   /// (3 & 4 Add to accumulator and, if needed, add to next correlator
-  accumulator[k] += wA;   // For higher levels we correlate averaged A with averaged B
+  accumulatorA[k] += wA;
+  accumulatorB[k] += wB;
   ++naccumulator[k];
-  if (naccumulator[k] == m) {
-    add(accumulator[k] / m, accumulator[k] / m, k + 1);
+  if (naccumulator[k] == m) { 
+    double avgA = accumulatorA[k] / m;
+    double avgB = accumulatorB[k] / m;
+    add(avgA, avgB, k + 1);
+    accumulatorA[k] = 0.0;
+    accumulatorB[k] = 0.0;
     accumulator[k] = 0;
     naccumulator[k] = 0;
   }

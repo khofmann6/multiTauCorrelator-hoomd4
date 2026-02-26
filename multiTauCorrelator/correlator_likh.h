@@ -18,8 +18,9 @@ class Correlator_Likh {
   double **shiftA;       // Where the incoming A values are stored
   double **shiftB;       // Where the incoming B values are stored
   double **correlation;  // Array for the actual calculated correlation function
-  unsigned long int **ncorrelation;  // Number of values accumulated in corr
-  double *accumulator;               // Accumulator in each correlator
+  unsigned long int **ncorrelation;  // Number of values accumulated in corr               
+  double *accumulatorA;              // Accumulator in each correlator
+  double *accumulatorB;
   unsigned int
       *naccumulator;  // Index that controls accumulation in each correlator
   unsigned int *insertindex;    // Index pointing at the position where current
