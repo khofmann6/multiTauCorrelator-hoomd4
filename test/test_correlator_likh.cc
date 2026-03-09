@@ -1,4 +1,4 @@
-#include "correlator_likh.h"
+#include "test_correlator_likh.h"
 #include <math.h>
 #include <iostream>
 
