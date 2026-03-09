@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include "test_correlator_likh.h"
+#include "correlator_likh.h"
 
 
 int main(int argc, char *argv[]) {
@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  Correlator_Likh c;
+  Correlator c;
   c.setsize(32, 16, 2);
   c.initialize();
 

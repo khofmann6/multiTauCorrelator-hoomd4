@@ -9,14 +9,18 @@
 #include <string>
 #include <vector>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 ////////////////////////////////////////////////////
 /// Standard Scalar Correlator f(tau)=<A(t)A(t+tau)>
 class Correlator_Likh {
  public:
-  double **shift;        // Where the incoming values are stored
+  double **shiftA;       // Where the incoming A values are stored
+  double **shiftB;       // Where the incoming B values are stored
   double **correlation;  // Array for the actual calculated correlation function
-  unsigned long int **ncorrelation;  // Number of values accumulated in corr
-  double *accumulator;               // Accumulator in each correlator
+  unsigned long int **ncorrelation;  // Number of values accumulated in corr               
+  double *accumulatorA;              // Accumulator in each correlator
+  double *accumulatorB;
   unsigned int
       *naccumulator;  // Index that controls accumulation in each correlator
   unsigned int *insertindex;    // Index pointing at the position where current
@@ -40,7 +44,8 @@ class Correlator_Likh {
       m;  // Number of points over which to average; RECOMMENDED: p mod m = 0
   double *t, *f;
   unsigned int npcorr;
-  double accval;  // Accumulated result of incoming values
+  double accvalA;  // Accumulated result of incoming A values
+  double accvalB;  // Accumulated result of incoming B values
 
   // Constructor
   Correlator_Likh() { numcorrelators = 0; };
@@ -51,12 +56,11 @@ class Correlator_Likh {
   void setsize(const unsigned int numcorrin = 32,  // Set size of correlator
                const unsigned int p_in = 16, const unsigned int m_in = 2);
 
-  void add(const double w,
-           const unsigned int k = 0);  // Add an int to the corr number k
+  void add(const double wA, const double wB, const unsigned int k = 0);
+
   void evaluate(
       const bool norm = false);  // Evaluate the current state of the correlator
   void initialize();  // Initialize all values (current and average) to zero
 };
-
 
 #endif
