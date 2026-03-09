@@ -1,4 +1,4 @@
-#include <fstream>
+include <fstream>
 #include <iostream>
 #include "test_correlator_likh.h"
 
@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  Correlator c;
+  Correlator_Likh c;
   c.setsize(32, 16, 2);
   c.initialize();
 
