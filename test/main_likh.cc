@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include "correlator_likh.h"
+#include "test_correlator_likh.h"
 
 
 int main(int argc, char *argv[]) {
