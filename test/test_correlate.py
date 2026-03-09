@@ -23,13 +23,21 @@ from hoomd.custom import Action
 from hoomd.logging import log
 
 # Compile Correlator_IO if not present or out of date
-def compile_correlator_io():
 
+def compile_correlator_io():
     print("Compiling Correlator_IO...")
-    ret = subprocess.call([
-        "g++", "-O2", "-std=c++11", "-o", "Correlator_IO",
+
+    includes = subprocess.check_output(
+        ["python3", "-m", "pybind11", "--includes"]
+    ).decode().strip().split()
+
+    cmd = ["g++", "-O2", "-std=c++11"] + includes + [
+        "-o", "Correlator_IO",
         "main_likh.cc", "test_correlator_likh.cc"
-    ])
+    ]
+
+    ret = subprocess.call(cmd)
+
     if ret != 0:
         raise RuntimeError("Failed to compile Correlator_IO")
 
