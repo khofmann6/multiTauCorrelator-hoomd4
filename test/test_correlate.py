@@ -23,25 +23,17 @@ from hoomd.custom import Action
 from hoomd.logging import log
 
 # Compile Correlator_IO if not present or out of date
-
 def compile_correlator_io():
+
     print("Compiling Correlator_IO...")
-
-    includes = subprocess.check_output(
-        ["python3", "-m", "pybind11", "--includes"]
-    ).decode().strip().split()
-
-    cmd = ["g++", "-O2", "-std=c++11"] + includes + [
-        "-o", "Correlator_IO",
+    ret = subprocess.call([
+        "g++", "-O2", "-std=c++11", "-o", "Correlator_IO",
         "main_likh.cc", "test_correlator_likh.cc"
-    ]
-
-    ret = subprocess.call(cmd)
-
+    ])
     if ret != 0:
         raise RuntimeError("Failed to compile Correlator_IO")
 
-QUANTITIES = ["pressure_xy", ("pressure_xy", "pressure_xy")]
+QUANTITIES = ["pressure_xy"]
 FILENAME = "corr_otf_test.txt"
 
 # method to separate the pressure tensor into its components and make them available as loggable quantities
@@ -144,7 +136,7 @@ class test_correlate(unittest.TestCase):
         """tests that the correct output file is created"""
         logger = hoomd.logging.Logger(categories=['scalar'])
         logger.add(self.presTensor, quantities=QUANTITIES[0])
-        
+
         integrator = hoomd.md.Integrator(dt=0.01)
         langevin = hoomd.md.methods.Langevin(filter=hoomd.filter.All(), kT=1.0)
         integrator.methods.append(langevin)

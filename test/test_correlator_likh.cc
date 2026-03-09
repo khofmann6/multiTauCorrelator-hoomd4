@@ -16,12 +16,10 @@ Correlator_Likh::Correlator_Likh(const unsigned int numcorrin,
 Correlator_Likh::~Correlator_Likh() {
   if (numcorrelators == 0) return;
 
-  delete[] shiftA;
-  delete[] shiftB;
+  delete[] shift;
   delete[] correlation;
   delete[] ncorrelation;
-  delete[] accumulatorA;
-  delete[] accumulatorB;
+  delete[] accumulator;
   delete[] naccumulator;
   delete[] insertindex;
 
@@ -45,18 +43,15 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
 
   length = numcorrelators * p;
 
-  shiftA = new double*[numcorrelators];
-  shiftB = new double*[numcorrelators];
+  shift = new double*[numcorrelators];
   correlation = new double*[numcorrelators];
   ncorrelation = new unsigned long int*[numcorrelators];
-  accumulatorA = new double[numcorrelators];
-  accumulatorB = new double[numcorrelators];
+  accumulator = new double[numcorrelators];
   naccumulator = new unsigned int[numcorrelators];
   insertindex = new unsigned int[numcorrelators];
 
   for (unsigned int j = 0; j < numcorrelators; ++j) {
-    shiftA[j] = new double[p];
-    shiftB[j] = new double[p];
+    shift[j] = new double[p];
 
     /* It can be optimized: Apart from correlator 0, correlation and
      * ncorrelation arrays only use p/2 values */
@@ -71,13 +66,11 @@ void Correlator_Likh::setsize(const unsigned int numcorrin,
 void Correlator_Likh::initialize() {
   for (unsigned int j = 0; j < numcorrelators; ++j) {
     for (unsigned int i = 0; i < p; ++i) {
-      shiftA[j][i] = -2E10;
-      shiftB[j][i] = -2E10;
+      shift[j][i] = -2E10;
       correlation[j][i] = 0;
       ncorrelation[j][i] = 0;
     }
-    accumulatorA[j] = 0.0;
-    accumulatorB[j] = 0.0;
+    accumulator[j] = 0.0;
     naccumulator[j] = 0;
     insertindex[j] = 0;
   }
@@ -89,11 +82,10 @@ void Correlator_Likh::initialize() {
 
   npcorr = 0;
   kmax = 0;
-  accvalA = 0;
-  accvalB = 0;
+  accval = 0;
 }
 
-void Correlator_Likh::add(const double wA, const double wB, const unsigned int k) {
+void Correlator_Likh::add(const double w, const unsigned int k) {
 /*
 The add function is called every time you have a new value (e.g., at each timestep). It:
 
@@ -107,25 +99,17 @@ The add function is called every time you have a new value (e.g., at each timest
   if (k > kmax) kmax = k;
 
   /// (1) Insert new value in shift array
-  shiftA[k][insertindex[k]] = wA;
-  shiftB[k][insertindex[k]] = wB;
+  shift[k][insertindex[k]] = w;
 
   /// Add to average value
-  if (k == 0) {
-    accvalA += wA;
-    accvalB += wB;
-  }
+  if (k == 0) accval += w;
 
   /// (3 & 4 Add to accumulator and, if needed, add to next correlator
-  accumulatorA[k] += wA;
-  accumulatorB[k] += wB;
+  accumulator[k] += w;
   ++naccumulator[k];
-  if (naccumulator[k] == m) { 
-    double avgA = accumulatorA[k] / m;
-    double avgB = accumulatorB[k] / m;
-    add(avgA, avgB, k + 1);
-    accumulatorA[k] = 0.0;
-    accumulatorB[k] = 0.0;
+  if (naccumulator[k] == m) {
+    add(accumulator[k] / m, k + 1);
+    accumulator[k] = 0;
     naccumulator[k] = 0;
   }
 
@@ -134,8 +118,8 @@ The add function is called every time you have a new value (e.g., at each timest
   if (k == 0) {  /// First correlator is different
     int ind2 = ind1;
     for (unsigned int j = 0; j < p; ++j) {
-      if (shiftA[k][ind2] > -1e10) {
-        correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
+      if (shift[k][ind2] > -1e10) {
+        correlation[k][j] += shift[k][ind1] * shift[k][ind2];
         ++ncorrelation[k][j];
       }
       --ind2;
@@ -145,8 +129,8 @@ The add function is called every time you have a new value (e.g., at each timest
     int ind2 = ind1 - d_min;
     for (unsigned int j = d_min; j < p; ++j) {
       if (ind2 < 0) ind2 += p;
-      if (shiftA[k][ind2] > -1e10) {
-        correlation[k][j] += shiftA[k][ind1] * shiftB[k][ind2];
+      if (shift[k][ind2] > -1e10) {
+        correlation[k][j] += shift[k][ind1] * shift[k][ind2];
         ++ncorrelation[k][j];
       }
       --ind2;
@@ -165,16 +149,12 @@ void Correlator_Likh::evaluate(const bool norm) {
   -Fills the output arrays (t and f) with the time lags and corresponding correlation values.
   -Sets npcorr to the number of valid correlation points.
 
-  \param norm: If norm is true, subtract the average value of 'tau=0'
+  \param norm: If norm is true, it normalizes the correlation values by the average value of the first correlator.
 */
   unsigned int im = 0;
 
   double aux = 0;
-  if (norm && ncorrelation[0][0] > 0) {
-    double meanA = accvalA / ncorrelation[0][0];
-    double meanB = accvalB / ncorrelation[0][0];
-    aux = meanA * meanB;
-  }
+  if (norm) aux = (accval / ncorrelation[0][0]) * (accval / ncorrelation[0][0]);
 
   // First correlator
   for (unsigned int i = 0; i < p; ++i) {
