@@ -35,6 +35,7 @@ def compile_correlator_io():
 
 QUANTITIES = ["pressure_xy",("pressure_xy","pressure_xy")]
 FILENAME = "corr_otf_test.txt"
+FILENAME2 = "crosscorr_otf_test.txt"
 
 # method to separate the pressure tensor into its components and make them available as loggable quantities
 class separatePressureTensor(hoomd.custom.Action):
@@ -129,7 +130,10 @@ class test_correlate(unittest.TestCase):
         logger = hoomd.logging.Logger(categories=['scalar'])
         logger.add(self.presTensor, quantities=QUANTITIES[0])
         corr = autocorrelate(
-            filename=FILENAME, quantities=QUANTITIES, logger=logger, eval_period=0
+            filename=FILENAME, quantities=QUANTITIES[:-1], logger=logger, eval_period=0
+        )
+        cross_corr = autocorrelate(
+            filename=FILENAME2, quantities=QUANTITIES[1:], logger=logger, eval_period=0
         )
 
     def test_create_file(self):
@@ -142,13 +146,20 @@ class test_correlate(unittest.TestCase):
         integrator.methods.append(langevin)
         self.sim.operations.integrator = integrator
         corr = autocorrelate(
-            filename=FILENAME, quantities=QUANTITIES, logger=logger, eval_period=0
+            filename=FILENAME, quantities=QUANTITIES[:-1], logger=logger, eval_period=0
+        )
+        cross_corr = autocorrelate(
+            filename=FILENAME2, quantities=QUANTITIES[1:], logger=logger, eval_period=0
         )
         correlator_writer = hoomd.write.CustomWriter(action=corr, trigger=hoomd.trigger.Periodic(1))
+        crosscorrelator_writer = hoomd.write.CustomWriter(action=cross_corr, trigger=hoomd.trigger.Periodic(1))
+
         self.sim.operations.writers.append(correlator_writer)
+        self.sim.operations.writers.append(crosscorrelator_writer)
         self.sim.run(10)
         corr.write_to_file(self.sim.timestep)
         self.assertTrue(os.path.isfile(FILENAME))
+        self.assertTrue(os.path.isfile(FILENAME2))
 
     def test_values(self):
         """
@@ -184,13 +195,15 @@ class test_correlate(unittest.TestCase):
 
         compile_correlator_io()
 
-        subprocess.call(["./Correlator_IO", "pressure_data.txt", "corr_post_proc.txt"])
+        subprocess.call(["./Correlator_IO", "pressure_data.txt", "corr_post_proc.txt", "crosscorr_post_proc.txt"])
 
         corr_post_proc = np.loadtxt("corr_post_proc.txt")
+        crosscorr_post_proc = np.loadtxt("crosscorr_post_proc.txt")
         corr_otf = np.loadtxt("corr_otf_test.txt", skiprows=2, delimiter=",")
         np.testing.assert_almost_equal(corr_post_proc, corr_otf, decimal=2)
-        silent_remove(["corr_post_proc.txt", "pressure_data.txt", "corr_otf_test.txt", "pressure_xy.log"])
+        np.testing.assert_almost_equal(crosscorr_post_proc, corr_otf, decimal=2)
 
+        silent_remove(["corr_post_proc.txt", "crosscorr_post_proc.txt", "pressure_data.txt", "corr_otf_test.txt", "pressure_xy.log"])
 
 if __name__ == "__main__":
     unittest.main(argv=["test_correlate.py", "-v"])
