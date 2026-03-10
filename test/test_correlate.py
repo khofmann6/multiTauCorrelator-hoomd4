@@ -158,6 +158,7 @@ class test_correlate(unittest.TestCase):
         self.sim.operations.writers.append(crosscorrelator_writer)
         self.sim.run(10)
         corr.write_to_file(self.sim.timestep)
+        cross_corr.write_to_file(self.sim.timestep)
         self.assertTrue(os.path.isfile(FILENAME))
         self.assertTrue(os.path.isfile(FILENAME2))
 
