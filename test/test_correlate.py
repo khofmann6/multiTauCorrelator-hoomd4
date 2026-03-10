@@ -175,10 +175,18 @@ class test_correlate(unittest.TestCase):
         integrator.methods.append(langevin)
         self.sim.operations.integrator = integrator
         corr = autocorrelate(
-            filename=FILENAME, quantities=QUANTITIES, logger=logger, eval_period=0
+            filename=FILENAME, quantities=QUANTITIES[:-1], logger=logger, eval_period=0
         )
+        cross_corr = autocorrelate(
+            filename=FILENAME2, quantities=QUANTITIES[1:], logger=logger, eval_period=0
+        )
+
         correlator_writer = hoomd.write.CustomWriter(action=corr, trigger=hoomd.trigger.Periodic(1))
+        crosscorrelator_writer = hoomd.write.CustomWriter(action=cross_corr, trigger=hoomd.trigger.Periodic(1))
+
         self.sim.operations.writers.append(correlator_writer)
+        self.sim.operations.writers.append(crosscorrelator_writer)
+
         # Set up a logger to file for pressure
         file_logger = hoomd.logging.Logger(categories=['scalar', 'scalar'])
         file_logger.add(self.sim, quantities='timestep')
@@ -190,9 +198,10 @@ class test_correlate(unittest.TestCase):
             self.sim.run(100)
 
         corr.write_to_file(self.sim.timestep)
+        cross_corr.write_to_file(self.sim.timestep)
+
         pressure_data = np.loadtxt("pressure_xy.log", skiprows=1, usecols=[1], delimiter=',')
         np.savetxt("pressure_data.txt", pressure_data)
-
 
         compile_correlator_io()
 
@@ -200,8 +209,8 @@ class test_correlate(unittest.TestCase):
 
         corr_post_proc = np.loadtxt("corr_post_proc.txt")
         corr_otf = np.loadtxt("corr_otf_test.txt", skiprows=2, delimiter=",")
-        crosscorr_otf = np.loadtxt("corr_otf_test.txt", skiprows=2, delimiter=",")
-        
+        crosscorr_otf = np.loadtxt("crosscorr_otf_test.txt", skiprows=2, delimiter=",")
+
         np.testing.assert_almost_equal(corr_post_proc, corr_otf, decimal=2)
         np.testing.assert_almost_equal(corr_post_proc, crosscorr_otf, decimal=2)
 
