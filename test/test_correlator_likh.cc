@@ -16,7 +16,8 @@ Correlator_Likh::Correlator_Likh(const unsigned int numcorrin,
 Correlator_Likh::~Correlator_Likh() {
   if (numcorrelators == 0) return;
 
-  delete[] shift;
+  delete[] shiftA;
+  delete[] shiftB;
   delete[] correlation;
   delete[] ncorrelation;
   delete[] accumulatorA;
@@ -92,7 +93,7 @@ void Correlator_Likh::initialize() {
   accvalB = 0;
 }
 
-void Correlator_Likh::add(const double w, const unsigned int k) {
+void Correlator_Likh::add(const double wA, const double wB, const unsigned int k) {
 /*
 The add function is called every time you have a new value (e.g., at each timestep). It:
 

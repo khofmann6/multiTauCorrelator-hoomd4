@@ -54,7 +54,7 @@ class Correlator_Likh {
   void setsize(const unsigned int numcorrin = 32,  // Set size of correlator
                const unsigned int p_in = 16, const unsigned int m_in = 2);
 
-  void add(const double w,
+  void add(const double wA, const double wB,
            const unsigned int k = 0);  // Add an int to the corr number k
   void evaluate(
       const bool norm = false);  // Evaluate the current state of the correlator
