@@ -33,7 +33,7 @@ def compile_correlator_io():
     if ret != 0:
         raise RuntimeError("Failed to compile Correlator_IO")
 
-QUANTITIES = ["pressure_xy"]
+QUANTITIES = ["pressure_xy",("pressure_xy","pressure_xy")]
 FILENAME = "corr_otf_test.txt"
 
 # method to separate the pressure tensor into its components and make them available as loggable quantities

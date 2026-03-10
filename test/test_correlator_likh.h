@@ -13,10 +13,12 @@
 /// Standard Scalar Correlator f(tau)=<A(t)A(t+tau)>
 class Correlator_Likh {
  public:
-  double **shift;        // Where the incoming values are stored
+  double **shiftA;       // Where the incoming A values are stored
+  double **shiftB;       // Where the incoming B values are stored
   double **correlation;  // Array for the actual calculated correlation function
   unsigned long int **ncorrelation;  // Number of values accumulated in corr
-  double *accumulator;               // Accumulator in each correlator
+  double *accumulatorA;              // Accumulator in each correlator
+  double *accumulatorB;
   unsigned int
       *naccumulator;  // Index that controls accumulation in each correlator
   unsigned int *insertindex;    // Index pointing at the position where current
@@ -40,7 +42,8 @@ class Correlator_Likh {
       m;  // Number of points over which to average; RECOMMENDED: p mod m = 0
   double *t, *f;
   unsigned int npcorr;
-  double accval;  // Accumulated result of incoming values
+  double accvalA;  // Accumulated result of incoming A values
+  double accvalB;  // Accumulated result of incoming B values
 
   // Constructor
   Correlator_Likh() { numcorrelators = 0; };
