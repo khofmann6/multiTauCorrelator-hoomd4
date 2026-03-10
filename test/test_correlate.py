@@ -199,10 +199,11 @@ class test_correlate(unittest.TestCase):
         subprocess.call(["./Correlator_IO", "pressure_data.txt", "corr_post_proc.txt", "crosscorr_post_proc.txt"])
 
         corr_post_proc = np.loadtxt("corr_post_proc.txt")
-        crosscorr_post_proc = np.loadtxt("crosscorr_post_proc.txt")
         corr_otf = np.loadtxt("corr_otf_test.txt", skiprows=2, delimiter=",")
+        crosscorr_otf = np.loadtxt("corr_otf_test.txt", skiprows=2, delimiter=",")
+        
         np.testing.assert_almost_equal(corr_post_proc, corr_otf, decimal=2)
-        np.testing.assert_almost_equal(crosscorr_post_proc, corr_otf, decimal=2)
+        np.testing.assert_almost_equal(corr_post_proc, crosscorr_otf, decimal=2)
 
         silent_remove(["corr_post_proc.txt", "crosscorr_post_proc.txt", "pressure_data.txt", "corr_otf_test.txt", "pressure_xy.log"])
 
